@@ -112,6 +112,14 @@ NavTableResources =
                             true
                         },
                         {
+                            "Subscriptions",
+                            "StripeAugment.Subscriptions",
+                            StripeAugment.Subscriptions(),
+                            "Table",
+                            "Table",
+                            true
+                        },
+                        {
                             "Products",
                             "StripeAugment.Products",
                             StripeAugment.Products(),
@@ -205,6 +213,171 @@ shared StripeAugment.Customers =
                             )
                     in
                         createdConverted
+                else
+                    #table(columns, {})
+        in
+            table;
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//                                      STRIPE SUBSCRIPTIONS API
+///////////////////////////////////////////////////////////////////////////////////////////////////
+[
+    DataSource.Kind = "StripeAugment"
+]
+shared StripeAugment.Subscriptions =
+    () =>
+        let
+            columns = {
+                "id",
+                "object",
+                "application_fee_percent",
+                "billing_cycle_anchor",
+                "billing_thresholds",
+                "cancel_at",
+                "cancel_at_period_end",
+                "canceled_at",
+                "collection_method",
+                "created",
+                "current_period_end",
+                "current_period_start",
+                "customer",
+                "days_until_due",
+                "default_payment_method",
+                "default_sources",
+                "default_tax_rates",
+                "discount",
+                "ended_at",
+                "items",
+                "latest_invoice",
+                "livemode",
+                "metadata",
+                "next_pending_invoice_item_invoice",
+                "pause_collection",
+                "pending_invoice_item_interval",
+                "pending_setup_intent",
+                "pending_update",
+                "schedule",
+                "start_date",
+                "status",
+                "transfer_data",
+                "trial_end",
+                "trial_start"
+            },
+            url = "https://api.stripe.com/v1/subscriptions",
+            tableOrEmpty = GetPagedData(url),
+            table =
+                if not Table.IsEmpty(tableOrEmpty) then
+                    let
+                        expandRecords =
+                            Table.ExpandRecordColumn(
+                                tableOrEmpty,
+                                "Column1",
+                                columns
+                            ),
+                        tableTyped =
+                            Table.TransformColumnTypes(
+                                expandRecords,
+                                {
+                                    {
+                                        "billing_cycle_anchor",
+                                        type number
+                                    },
+                                    {
+                                        "cancel_at",
+                                        type number
+                                    },
+                                    {
+                                        "cancel_at_period_end",
+                                        type logical
+                                    },
+                                    {
+                                        "canceled_at",
+                                        type number
+                                    },
+                                    {
+                                        "created",
+                                        type number
+                                    },
+                                    {
+                                        "current_period_end",
+                                        type number
+                                    },
+                                    {
+                                        "current_period_start",
+                                        type number
+                                    },
+                                    {
+                                        "days_until_due",
+                                        type number
+                                    },
+                                    {
+                                        "ended_at",
+                                        type number
+                                    },
+                                    {
+                                        "livemode",
+                                        type logical
+                                    },
+                                    {
+                                        "start_date",
+                                        type number
+                                    },
+                                    {
+                                        "trial_end",
+                                        type number
+                                    },
+                                    {
+                                        "trial_start",
+                                        type number
+                                    }
+                                }
+                            ),
+                        billingCycleConverted =
+                            ConvertUnixToDateTime(
+                                tableTyped,
+                                "billing_cycle_anchor"
+                            ),
+                        cancelAtConverted =
+                            ConvertUnixToDateTime(
+                                billingCycleConverted,
+                                "cancel_at"
+                            ),
+                        createdConverted =
+                            ConvertUnixToDateTime(
+                                cancelAtConverted,
+                                "created"
+                            ),
+                        currentPeriodEndConverted =
+                            ConvertUnixToDateTime(
+                                createdConverted,
+                                "current_period_end"
+                            ),
+                        currentPeriodStartConverted =
+                            ConvertUnixToDateTime(
+                                currentPeriodEndConverted,
+                                "current_period_start"
+                            ),
+                        endedAtConverted =
+                            ConvertUnixToDateTime(
+                                currentPeriodStartConverted,
+                                "ended_at"
+                            ),
+                        startDateConverted =
+                            ConvertUnixToDateTime(
+                                endedAtConverted,
+                                "start_date"
+                            ),
+                        trialEndConverted =
+                            ConvertUnixToDateTime(
+                                startDateConverted,
+                                "trial_end"
+                            ),
+                        trialStartConverted =
+                            ConvertUnixToDateTime(
+                                trialEndConverted,
+                                "trial_start"
+                            )
+                    in
+                        trialStartConverted
                 else
                     #table(columns, {})
         in
