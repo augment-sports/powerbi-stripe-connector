@@ -99,41 +99,18 @@ shared StripeAugment.Products = () =>
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //                                      DATA TOOLS
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-_GetPagedData = (url) =>
-    let
-        seedResult = Json.Document(Web.Contents(url)),
-        seedHasMore = seedResult[has_more],
-        seedLastId = List.Last(seedResult[data])[id],
 
-        joined_response = if seedHasMore
-            then 
-                List.Generate(
-                    ()=> [result = seedResult, query = url, has_more = seedHasMore, lastId = seedLastId], 
-                    each [has_more], 
-                    each [
-                        query = url & "&" & Uri.BuildQueryString([starting_after=lastId]),
-                        result = Json.Document(Web.Contents([query])),
-                        lastId = List.Last(result[data])[id],
-                        has_more = result[has_more]
-                    ], 
-                    each [result]
-                ) 
-            else
-                {seedResult},
-
-        table = Table.FromList(joined_response, Splitter.SplitByNothing(), null, null, ExtraValues.Error)
-    in
-        table;
 
 GetPagedData = (url) =>
     let
-        seedResult = Json.Document(Web.Contents(url)),
+        headers = [ #"Stripe-Version" = "2020-08-27" ],
+        seedResult = Json.Document(Web.Contents(url, [Headers=headers])),
         seedHasMore = seedResult[has_more],
         seedLastId = List.Last(seedResult[data])[id],
 
         getPages = (query, result) =>
             let
-                response = Json.Document(Web.Contents(query)),
+                response = Json.Document(Web.Contents(query, [Headers=headers])),
                 newResult = List.Combine({result, response[data]}),
                 nextQuery = if response[has_more] then url & "&" & Uri.BuildQueryString([starting_after=List.Last(response[data])[id]]) else  null
             in
