@@ -126,6 +126,14 @@ NavTableResources =
                             "Table",
                             "Table",
                             true
+                        },
+                        {
+                            "Prices",
+                            "StripeAugment.Prices",
+                            StripeAugment.Prices(),
+                            "Table",
+                            "Table",
+                            true
                         }
                     }
                 ),
@@ -457,6 +465,78 @@ shared StripeAugment.Products =
                             )
                     in
                         updatedConverted
+                else
+                    #table(columns, {})
+        in
+            table;
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//                                      STRIPE PRICES API
+///////////////////////////////////////////////////////////////////////////////////////////////////
+[
+    DataSource.Kind = "StripeAugment"
+]
+shared StripeAugment.Prices =
+    () =>
+        let
+            columns = {
+                "id",
+                "object",
+                "active",
+                "billing_scheme",
+                "created",
+                "currency",
+                "livemode",
+                "lookup_key",
+                "metadata",
+                "nickname",
+                "product",
+                "recurring",
+                "tires_mode",
+                "transform_quantity",
+                "type",
+                "unit_amount",
+                "unit_amount_decimal"
+            },
+            url = "https://api.stripe.com/v1/prices",
+            tableOrEmpty = GetPagedData(url),
+            table =
+                if not Table.IsEmpty(tableOrEmpty) then
+                    let
+                        expandRecords =
+                            Table.ExpandRecordColumn(
+                                tableOrEmpty,
+                                "Column1",
+                                columns
+                            ),
+                        tableTyped =
+                            Table.TransformColumnTypes(
+                                expandRecords,
+                                {
+                                    {
+                                        "active",
+                                        type logical
+                                    },
+                                    {
+                                        "created",
+                                        type number
+                                    },
+                                    {
+                                        "livemode",
+                                        type logical
+                                    },
+                                    {
+                                        "unit_amount",
+                                        type number
+                                    }
+                                }
+                            ),
+                        createdConverted =
+                            ConvertUnixToDateTime(
+                                tableTyped,
+                                "created"
+                            )
+                    in
+                        createdConverted
                 else
                     #table(columns, {})
         in
