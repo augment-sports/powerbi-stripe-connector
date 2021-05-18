@@ -77,19 +77,18 @@ NavTableResources = () as table =>
 [DataSource.Kind="StripeAugment"]
 shared StripeAugment.Products = () =>
     let
-        columns = {"id", "object", "active", "attributes", "caption", "created", "deactivate_on", "description", "images", "livemode", "metadata", "name", "package_dimensions", "shippable", "skus", "statement_descriptor", "type", "unit_label", "updated", "url"},
+        columns = {"id", "object", "active", "created", "description", "images", "livemode", "metadata", "name", "package_dimensions", "shippable", "statement_descriptor", "unit_label", "updated", "url"},
         url = "https://api.stripe.com/v1/products?limit=100",
         tableOrEmpty = GetPagedData(url),
 
         table = if not Table.IsEmpty(tableOrEmpty) then 
             let 
                 expandRecords = Table.ExpandRecordColumn(tableOrEmpty, "Column1", columns),
-                removedObject = Table.RemoveColumns(expandRecords,{"object"}),
-                tableTyped = Table.TransformColumnTypes(removedObject, {{"created", type number}, {"active", type logical}, {"livemode", type logical}, {"shippable", type logical}, {"updated", type number}}),
+                tableTyped = Table.TransformColumnTypes(expandRecords, {{"active", type logical}, {"created", type number}, {"livemode", type logical}, {"shippable", type logical}, {"updated", type number}}),
                 createdConverted = ConvertUnixToDateTime(tableTyped, "created"),
                 updatedConverted = ConvertUnixToDateTime(createdConverted, "updated")
             in 
-                createdConverted
+                updatedConverted
         else 
             #table(columns, {})
     in
