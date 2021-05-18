@@ -152,7 +152,7 @@ shared StripeAugment.Products =
                 "updated",
                 "url"
             },
-            url = "https://api.stripe.com/v1/products?limit=100",
+            url = "https://api.stripe.com/v1/products",
             tableOrEmpty = GetPagedData(url),
             table =
                 if not Table.IsEmpty(tableOrEmpty) then
@@ -212,10 +212,17 @@ shared StripeAugment.Products =
 GetPagedData =
     (url) =>
         let
+            urlQuery = url & "?limit=100",
             headers = [
                 #"Stripe-Version" = "2020-08-27"
             ],
-            seedResult = Json.Document(Web.Contents(url, [Headers = headers])),
+            seedResult =
+                Json.Document(
+                    Web.Contents(
+                        urlQuery,
+                        [Headers = headers]
+                    )
+                ),
             seedHasMore = seedResult[has_more],
             seedLastId = List.Last(seedResult[data])[id],
             getPages =
@@ -231,7 +238,7 @@ GetPagedData =
                             ),
                         nextQuery =
                             if response[has_more] then
-                                url
+                                urlQuery
                                 & "&"
                                 & Uri.BuildQueryString([starting_after = List.Last(response[data])[id]])
                             else
@@ -241,7 +248,7 @@ GetPagedData =
                             @getPages(nextQuery, newResult)
                         else
                             newResult,
-            joined_pages = getPages(url, {}),
+            joined_pages = getPages(urlQuery, {}),
             table =
                 Table.FromList(
                     joined_pages,
