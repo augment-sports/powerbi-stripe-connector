@@ -104,6 +104,14 @@ NavTableResources =
                     },
                     {
                         {
+                            "Customers",
+                            "StripeAugment.Customers",
+                            StripeAugment.Customers(),
+                            "Table",
+                            "Table",
+                            true
+                        },
+                        {
                             "Products",
                             "StripeAugment.Products",
                             StripeAugment.Products(),
@@ -126,6 +134,81 @@ NavTableResources =
         in
             NavTable;
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//                                      STRIPE CUSTOMERS API
+///////////////////////////////////////////////////////////////////////////////////////////////////
+[
+    DataSource.Kind = "StripeAugment"
+]
+shared StripeAugment.Customers =
+    () =>
+        let
+            columns = {
+                "id",
+                "object",
+                "address",
+                "balance",
+                "created",
+                "currency",
+                "default_source",
+                "delinquent",
+                "description",
+                "discount",
+                "email",
+                "invoice_prefix",
+                "invoice_settings",
+                "livemode",
+                "metadata",
+                "name",
+                "phone",
+                "preferred_locales",
+                "shipping",
+                "tax_exempt"
+            },
+            url = "https://api.stripe.com/v1/customers",
+            tableOrEmpty = GetPagedData(url),
+            table =
+                if not Table.IsEmpty(tableOrEmpty) then
+                    let
+                        expandRecords =
+                            Table.ExpandRecordColumn(
+                                tableOrEmpty,
+                                "Column1",
+                                columns
+                            ),
+                        tableTyped =
+                            Table.TransformColumnTypes(
+                                expandRecords,
+                                {
+                                    {
+                                        "balance",
+                                        type number
+                                    },
+                                    {
+                                        "created",
+                                        type number
+                                    },
+                                    {
+                                        "delinquent",
+                                        type logical
+                                    },
+                                    {
+                                        "livemode",
+                                        type logical
+                                    }
+                                }
+                            ),
+                        createdConverted =
+                            ConvertUnixToDateTime(
+                                tableTyped,
+                                "created"
+                            )
+                    in
+                        createdConverted
+                else
+                    #table(columns, {})
+        in
+            table;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //                                      STRIPE PRODUCTS API
 ///////////////////////////////////////////////////////////////////////////////////////////////////
