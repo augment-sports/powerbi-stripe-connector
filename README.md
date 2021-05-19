@@ -1,6 +1,6 @@
 # Power BI connector for Stripe
 
-This connector is based on work from [SCITYLANA](https://github.com/mbilling/PBIConnectors) but aims to provide more comprehensive solution for fetching data from Stripe.
+This connector is based on work from [SCITYLANA](https://github.com/mbilling/PBIConnectors) but aims to provide more comprehensive and up-to-date solution for fetching data from Stripe.
 
 ## Usage
 
